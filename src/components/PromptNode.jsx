@@ -67,7 +67,6 @@ const PromptNode = ({
       className={`absolute bg-dark-800 border border-dark-600 rounded-lg shadow-xl transition-all duration-200 ${
         isDragging ? 'cursor-grabbing shadow-2xl border-primary-500' : 'cursor-grab hover:border-primary-500/50'
       } ${hasConnections ? 'border-primary-500/30' : ''}`}
-      }`}
       style={{
         left: node.position.x,
         top: node.position.y,
@@ -155,5 +154,7 @@ const PromptNode = ({
     </div>
   )
 }
+
+export default PromptNode
 
 export default PromptNode
