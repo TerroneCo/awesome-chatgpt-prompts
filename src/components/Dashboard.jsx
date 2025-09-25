@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { Plus, Clock, Star, Workflow, FileText, Zap, ArrowRight, Sparkles } from 'lucide-react'
 
 const Dashboard = () => {
@@ -72,10 +73,10 @@ const Dashboard = () => {
                 <p className="text-slate-400 mb-8 leading-relaxed">
                   Start from scratch and build a custom AI workflow tailored to your specific needs
                 </p>
-                <button className="btn-primary w-full flex items-center justify-center space-x-2">
+                <Link to="/workflow-builder" className="btn-primary w-full flex items-center justify-center space-x-2">
                   <span>Get Started</span>
                   <ArrowRight className="h-5 w-5" />
-                </button>
+                </Link>
               </div>
             </div>
           </div>
