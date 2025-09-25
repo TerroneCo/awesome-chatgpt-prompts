@@ -8,6 +8,64 @@ import PromptNode from './PromptNode'
 const WorkflowBuilder = () => {
   const [prompts, setPrompts] = useState([])
   const [filteredPrompts, setFilteredPrompts] = useState([])
+  const [dataSources] = useState([
+    {
+      id: 'clay-table',
+      title: 'Clay Table',
+      type: 'data-source',
+      category: 'Clay',
+      description: 'Import enriched company data from Clay tables',
+      icon: 'database',
+      brandColor: '#FF6B35',
+      fields: ['Company Name', 'Industry', 'Employee Count', 'Website', 'Revenue'],
+      isRealtime: false
+    },
+    {
+      id: 'hubspot-contacts',
+      title: 'HubSpot Contacts',
+      type: 'data-source',
+      category: 'HubSpot',
+      description: 'Sync contacts and deals from HubSpot CRM',
+      icon: 'users',
+      brandColor: '#FF7A59',
+      fields: ['Contact Name', 'Email', 'Company', 'Deal Stage', 'Last Activity'],
+      isRealtime: false
+    },
+    {
+      id: 'salesforce-leads',
+      title: 'Salesforce Leads',
+      type: 'data-source',
+      category: 'Salesforce',
+      description: 'Import leads and opportunities from Salesforce',
+      icon: 'briefcase',
+      brandColor: '#00A1E0',
+      fields: ['Lead Name', 'Company', 'Status', 'Source', 'Score'],
+      isRealtime: false
+    },
+    {
+      id: 'webhook-trigger',
+      title: 'Webhook Trigger',
+      type: 'data-source',
+      category: 'Real-time',
+      description: 'Receive real-time data via webhook endpoints',
+      icon: 'zap',
+      brandColor: '#8B5CF6',
+      fields: ['Dynamic Payload', 'Timestamp', 'Source IP', 'Event Type'],
+      isRealtime: true,
+      webhookUrl: 'https://api.promptflow.com/webhook/abc123'
+    },
+    {
+      id: 'csv-upload',
+      title: 'CSV Upload',
+      type: 'data-source',
+      category: 'File',
+      description: 'Upload and process CSV data files',
+      icon: 'file-text',
+      brandColor: '#10B981',
+      fields: ['Dynamic Headers', 'Row Count', 'File Size', 'Upload Date'],
+      isRealtime: false
+    }
+  ])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [canvasNodes, setCanvasNodes] = useState([])
@@ -130,9 +188,10 @@ const WorkflowBuilder = () => {
     const { active } = event
     setActiveId(active.id)
     
-    // Find the prompt being dragged
+    // Find the item being dragged (prompt or data source)
     const prompt = prompts.find(p => p.id.toString() === active.id)
-    setDraggedPrompt(prompt)
+    const dataSource = dataSources.find(ds => ds.id === active.id)
+    setDraggedPrompt(prompt || dataSource)
   }
 
   const handleDragEnd = (event) => {
@@ -140,16 +199,25 @@ const WorkflowBuilder = () => {
     
     if (over && over.id === 'canvas-drop-zone') {
       const prompt = prompts.find(p => p.id.toString() === active.id)
-      if (prompt) {
+      const dataSource = dataSources.find(ds => ds.id === active.id)
+      const item = prompt || dataSource
+      
+      if (item) {
         // Create a new node on the canvas
         const newNode = {
           id: `node-${Date.now()}`,
-          promptId: prompt.id,
-          title: prompt.title,
-          category: prompt.category,
-          content: prompt.content,
+          promptId: item.id,
+          title: item.title,
+          category: item.category,
+          content: item.description || item.content,
+          type: item.type || 'prompt',
+          brandColor: item.brandColor,
+          icon: item.icon,
+          fields: item.fields,
+          isRealtime: item.isRealtime,
+          webhookUrl: item.webhookUrl,
           position: { x: 100, y: 100 },
-          size: { width: 300, height: 200 },
+          size: item.type === 'data-source' ? { width: 280, height: 160 } : { width: 300, height: 200 },
           isCollapsed: false
         }
         setCanvasNodes(prev => [...prev, newNode])
@@ -310,6 +378,26 @@ const WorkflowBuilder = () => {
       >
         {/* Left Sidebar - Prompt Library */}
         <div className="w-80 bg-dark-800 border-r border-dark-700 flex flex-col">
+          {/* Data Sources Section */}
+          <div className="border-b border-dark-700">
+            <div className="p-4">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                <div className="bg-gradient-to-r from-primary-500 to-secondary-500 p-2 rounded-lg">
+                  <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                </div>
+                <span>Data Sources</span>
+              </h2>
+            </div>
+            
+            <div className="px-4 pb-4 space-y-2">
+              {dataSources.map((dataSource) => (
+                <DataSourceCard key={dataSource.id} dataSource={dataSource} />
+              ))}
+            </div>
+          </div>
+
           <div className="p-4 border-b border-dark-700">
             <h2 className="text-lg font-semibold text-white mb-4">Prompt Library</h2>
             
@@ -402,16 +490,53 @@ const WorkflowBuilder = () => {
         {/* Drag Overlay */}
         <DragOverlay>
           {activeId && draggedPrompt ? (
-            <div className="bg-dark-700 border border-primary-500 rounded-lg p-3 shadow-xl opacity-90 max-w-xs">
+            <div className={`${
+              draggedPrompt.type === 'data-source' 
+                ? 'bg-gradient-to-br from-dark-700 to-dark-800 border-2 rounded-lg' 
+                : 'bg-dark-700 border border-primary-500 rounded-lg'
+            } p-3 shadow-xl opacity-90 max-w-xs`}
+            style={draggedPrompt.type === 'data-source' ? {
+              borderColor: draggedPrompt.brandColor,
+              boxShadow: `0 0 20px ${draggedPrompt.brandColor}40`
+            } : {}}>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-white text-sm">{draggedPrompt.title}</h3>
-                <span className="text-xs bg-primary-500/20 text-primary-300 px-2 py-1 rounded">
+                <div className="flex items-center space-x-2">
+                  {draggedPrompt.type === 'data-source' && (
+                    <div className="p-1 rounded" style={{ backgroundColor: `${draggedPrompt.brandColor}20` }}>
+                      <DataSourceIcon icon={draggedPrompt.icon} color={draggedPrompt.brandColor} size={16} />
+                    </div>
+                  )}
+                  <h3 className="font-medium text-white text-sm">{draggedPrompt.title}</h3>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded ${
+                  draggedPrompt.type === 'data-source' 
+                    ? 'text-white' 
+                    : 'bg-primary-500/20 text-primary-300'
+                }`}
+                style={draggedPrompt.type === 'data-source' ? {
+                  backgroundColor: `${draggedPrompt.brandColor}40`,
+                  color: draggedPrompt.brandColor
+                } : {}}>
                   {draggedPrompt.category}
                 </span>
               </div>
+              {draggedPrompt.isRealtime && (
+                <div className="mb-2">
+                  <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded-full">
+                    Real-time
+                  </span>
+                </div>
+              )}
               <p className="text-xs text-slate-400 line-clamp-2">
                 {draggedPrompt.description}
               </p>
+              {draggedPrompt.fields && (
+                <div className="mt-2">
+                  <span className="text-xs text-slate-500">
+                    {draggedPrompt.fields.length} fields
+                  </span>
+                </div>
+              )}
             </div>
           ) : null}
         </DragOverlay>

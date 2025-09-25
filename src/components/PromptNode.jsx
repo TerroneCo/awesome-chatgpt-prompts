@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { X, ChevronDown, ChevronRight, GripVertical } from 'lucide-react'
+import { DataSourceIcon } from './DataSourceCard'
 
 const ConnectionPoint = ({ nodeId, type, position, onConnectionStart, onConnectionEnd }) => {
   const handleMouseDown = (e) => {
@@ -92,7 +93,18 @@ const PromptNode = ({ node, onDelete, onUpdate, onConnectionStart, onConnectionE
       className={`absolute bg-dark-800 border border-dark-600 rounded-lg shadow-xl transition-all duration-200 ${
         isDragging ? 'cursor-grabbing shadow-2xl border-primary-500' : 'cursor-grab hover:border-primary-500/50'
       }`}
-      style={{
+      style={node.type === 'data-source' ? {
+        left: node.position.x,
+        top: node.position.y,
+        width: node.size.width,
+        minHeight: node.isCollapsed ? 'auto' : node.size.height,
+        zIndex: 2,
+        background: `linear-gradient(135deg, #1e293b 0%, #0f172a 100%)`,
+        borderColor: node.brandColor,
+        borderWidth: '2px',
+        borderRadius: '8px',
+        boxShadow: `0 0 20px ${node.brandColor}20`
+      } : {
         left: node.position.x,
         top: node.position.y,
         width: node.size.width,
@@ -130,15 +142,55 @@ const PromptNode = ({ node, onDelete, onUpdate, onConnectionStart, onConnectionE
               <ChevronDown className="h-4 w-4" />
             )}
           </button>
+          
+          {/* Data source icon */}
+          {node.type === 'data-source' && node.icon && (
+            <div 
+              className="p-1 rounded"
+              style={{ backgroundColor: `${node.brandColor}20` }}
+            >
+              <DataSourceIcon 
+                icon={node.icon} 
+                color={node.brandColor} 
+                size={16} 
+              />
+            </div>
+          )}
+          
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-white text-sm truncate">{node.title}</h3>
-            <span className="text-xs bg-primary-500/20 text-primary-300 px-2 py-1 rounded">
+            <div className="flex items-center space-x-2 mt-1">
+              <span 
+                className="text-xs px-2 py-1 rounded font-medium"
+                style={node.type === 'data-source' ? {
+                  backgroundColor: `${node.brandColor}30`,
+                  color: node.brandColor
+                } : {
+                  backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                  color: '#93c5fd'
+                }}
+              >
               {node.category}
-            </span>
+              </span>
+              {node.isRealtime && (
+                <span className="text-xs bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full animate-pulse">
+                  Real-time
+                </span>
+              )}
+            </div>
           </div>
         </div>
         
         <div className="flex items-center space-x-1">
+          {/* Field count badge for data sources */}
+          {node.type === 'data-source' && node.fields && (
+            <span 
+              className="text-xs font-bold px-1.5 py-0.5 rounded-full text-white mr-2"
+              style={{ backgroundColor: node.brandColor }}
+            >
+              {node.fields.length}
+            </span>
+          )}
           <GripVertical className="h-4 w-4 text-slate-500" />
           <button
             onClick={() => onDelete(node.id)}
@@ -152,11 +204,50 @@ const PromptNode = ({ node, onDelete, onUpdate, onConnectionStart, onConnectionE
       {/* Node Content */}
       {!node.isCollapsed && (
         <div className="p-3 node-content">
-          <div className="bg-dark-700 rounded p-3 max-h-32 overflow-y-auto">
-            <p className="text-xs text-slate-300 leading-relaxed">
-              {node.content}
-            </p>
-          </div>
+          {node.type === 'data-source' ? (
+            <div className="space-y-3">
+              {/* Webhook URL for webhook nodes */}
+              {node.webhookUrl && (
+                <div className="p-2 bg-dark-700 rounded border border-dark-600">
+                  <p className="text-xs text-slate-500 mb-1">Webhook URL:</p>
+                  <code className="text-xs text-green-400 font-mono break-all">
+                    {node.webhookUrl}
+                  </code>
+                </div>
+              )}
+              
+              {/* Sample fields */}
+              {node.fields && (
+                <div>
+                  <p className="text-xs text-slate-500 font-medium mb-2">Available Fields:</p>
+                  <div className="grid grid-cols-2 gap-1">
+                    {node.fields.map((field, index) => (
+                      <span 
+                        key={index}
+                        className="text-xs bg-dark-700 text-slate-300 px-2 py-1 rounded truncate"
+                        title={field}
+                      >
+                        {field}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Description */}
+              <div className="bg-dark-700 rounded p-2">
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  {node.content}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-dark-700 rounded p-3 max-h-32 overflow-y-auto">
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {node.content}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
