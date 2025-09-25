@@ -379,11 +379,11 @@ const WorkflowBuilder = () => {
         onDragEnd={handleDragEnd}
       >
         {/* Left Sidebar - Prompt Library */}
-        <div className="w-80 bg-dark-800 border-r border-dark-700 flex flex-col">
+        <div className="w-80 bg-dark-800 border-r border-dark-700 flex flex-col h-full overflow-hidden">
           {/* Data Sources Section */}
-          <div className="border-b border-dark-700">
-            <div className="p-4">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+          <div className="border-b border-dark-700 flex-shrink-0">
+            <div className="p-3">
+              <h2 className="text-base font-semibold text-white mb-3 flex items-center space-x-2">
                 <div className="bg-gradient-to-r from-primary-500 to-secondary-500 p-2 rounded-lg">
                   <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
@@ -393,18 +393,18 @@ const WorkflowBuilder = () => {
               </h2>
             </div>
             
-            <div className="px-4 pb-4 space-y-2">
+            <div className="px-3 pb-3 space-y-2 max-h-64 overflow-y-auto">
               {dataSources.map((dataSource) => (
                 <DataSourceCard key={dataSource.id} dataSource={dataSource} />
               ))}
             </div>
           </div>
 
-          <div className="p-4 border-b border-dark-700">
-            <h2 className="text-lg font-semibold text-white mb-4">Prompt Library</h2>
+          <div className="p-3 border-b border-dark-700 flex-shrink-0">
+            <h2 className="text-base font-semibold text-white mb-3">Prompt Library</h2>
             
             {/* Search */}
-            <div className="relative mb-4">
+            <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
@@ -430,7 +430,9 @@ const WorkflowBuilder = () => {
           </div>
 
           {/* Prompt List */}
-          <PromptLibrary prompts={filteredPrompts} />
+          <div className="flex-1 overflow-hidden">
+            <PromptLibrary prompts={filteredPrompts} />
+          </div>
         </div>
 
         {/* Main Canvas Area */}

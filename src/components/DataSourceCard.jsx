@@ -83,7 +83,7 @@ const DataSourceCard = ({ dataSource }) => {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`relative bg-gradient-to-br from-dark-700 to-dark-800 border-2 rounded-lg p-3 cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-lg ${
+      className={`relative bg-gradient-to-br from-dark-700 to-dark-800 border-2 rounded-lg p-2 cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-lg ${
         isDragging ? 'opacity-50' : ''
       }`}
       style={(() => {
@@ -96,35 +96,35 @@ const DataSourceCard = ({ dataSource }) => {
       })()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center space-x-2">
           <div 
-            className="p-1.5 rounded-lg"
+            className="p-1 rounded-lg"
             style={{ backgroundColor: `${dataSource.brandColor}20` }}
           >
             <DataSourceIcon 
               icon={dataSource.icon} 
               color={dataSource.brandColor} 
-              size={16} 
+              size={14} 
             />
           </div>
-          <h3 className="font-medium text-white text-sm truncate">
+          <h3 className="font-medium text-white text-xs truncate">
             {dataSource.title}
           </h3>
         </div>
         
         {/* Real-time badge */}
         {dataSource.isRealtime && (
-          <span className="text-xs bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full animate-pulse">
+          <span className="text-[10px] bg-green-500/20 text-green-300 px-1.5 py-0.5 rounded-full animate-pulse">
             Real-time
           </span>
         )}
       </div>
 
       {/* Category badge */}
-      <div className="mb-2">
+      <div className="mb-1.5">
         <span 
-          className="text-xs px-2 py-1 rounded font-medium"
+          className="text-[10px] px-1.5 py-0.5 rounded font-medium"
           style={{ 
             backgroundColor: `${dataSource.brandColor}30`,
             color: dataSource.brandColor 
@@ -135,15 +135,15 @@ const DataSourceCard = ({ dataSource }) => {
       </div>
 
       {/* Description */}
-      <p className="text-xs text-slate-400 mb-3 leading-relaxed">
+      <p className="text-[10px] text-slate-400 mb-2 leading-relaxed line-clamp-2">
         {dataSource.description}
       </p>
 
       {/* Webhook URL for webhook nodes */}
       {dataSource.webhookUrl && (
-        <div className="mb-2 p-2 bg-dark-600 rounded border border-dark-500">
-          <p className="text-xs text-slate-500 mb-1">Webhook URL:</p>
-          <code className="text-xs text-green-400 font-mono break-all">
+        <div className="mb-1.5 p-1.5 bg-dark-600 rounded border border-dark-500">
+          <p className="text-[9px] text-slate-500 mb-0.5">Webhook URL:</p>
+          <code className="text-[9px] text-green-400 font-mono break-all">
             {dataSource.webhookUrl}
           </code>
         </div>
@@ -151,19 +151,19 @@ const DataSourceCard = ({ dataSource }) => {
 
       {/* Sample fields */}
       <div className="space-y-1">
-        <p className="text-xs text-slate-500 font-medium">Sample Fields:</p>
+        <p className="text-[10px] text-slate-500 font-medium">Sample Fields:</p>
         <div className="flex flex-wrap gap-1">
-          {dataSource.fields.slice(0, 3).map((field, index) => (
+          {dataSource.fields.slice(0, 2).map((field, index) => (
             <span 
               key={index}
-              className="text-xs bg-dark-600 text-slate-300 px-2 py-0.5 rounded"
+              className="text-[9px] bg-dark-600 text-slate-300 px-1.5 py-0.5 rounded"
             >
               {field}
             </span>
           ))}
-          {dataSource.fields.length > 3 && (
-            <span className="text-xs text-slate-500">
-              +{dataSource.fields.length - 3} more
+          {dataSource.fields.length > 2 && (
+            <span className="text-[9px] text-slate-500">
+              +{dataSource.fields.length - 2} more
             </span>
           )}
         </div>
@@ -172,7 +172,7 @@ const DataSourceCard = ({ dataSource }) => {
       {/* Field count badge */}
       <div className="absolute -top-1 -right-1">
         <span 
-          className="text-xs font-bold px-1.5 py-0.5 rounded-full text-white"
+          className="text-[10px] font-bold px-1 py-0.5 rounded-full text-white"
           style={{ backgroundColor: dataSource.brandColor }}
         >
           {dataSource.fields.length}

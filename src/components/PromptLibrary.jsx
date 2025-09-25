@@ -29,14 +29,14 @@ const PromptCard = ({ prompt }) => {
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-white text-sm truncate">{prompt.title}</h3>
-          <span className="text-xs bg-primary-500/20 text-primary-300 px-2 py-1 rounded mt-1 inline-block">
+          <h3 className="font-medium text-white text-xs truncate">{prompt.title}</h3>
+          <span className="text-[10px] bg-primary-500/20 text-primary-300 px-1.5 py-0.5 rounded mt-1 inline-block">
             {prompt.category}
           </span>
         </div>
         <GripVertical className="h-4 w-4 text-slate-500 flex-shrink-0 ml-2" />
       </div>
-      <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+      <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">
         {prompt.description}
       </p>
     </div>
@@ -45,7 +45,7 @@ const PromptCard = ({ prompt }) => {
 
 const PromptLibrary = ({ prompts }) => {
   return (
-    <div className="flex-1 overflow-y-auto p-4">
+    <div className="h-full overflow-y-auto p-3">
       <div className="space-y-2">
         {prompts.length === 0 ? (
           <div className="text-center py-8">
