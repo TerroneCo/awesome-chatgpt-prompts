@@ -333,8 +333,13 @@ const WorkflowBuilder = () => {
           <WorkflowCanvas
             nodes={canvasNodes}
             zoomLevel={zoomLevel}
+            connections={connections}
+            tempConnection={tempConnection}
             onDeleteNode={handleDeleteNode}
             onUpdateNode={handleUpdateNode}
+            onConnectionStart={handleConnectionStart}
+            onConnectionEnd={handleConnectionEnd}
+            onConnectionDelete={handleConnectionDelete}
           />
         </div>
 
