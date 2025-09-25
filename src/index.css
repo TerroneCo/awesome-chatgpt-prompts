@@ -80,3 +80,12 @@ svg path {
 .connection-selected {
   filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
 }
+/* Variable highlighting styles */
+.variable-highlight {
+  background-color: rgba(139, 92, 246, 0.3);
+  color: #a78bfa;
+  padding: 1px 3px;
+  border-radius: 3px;
+  font-weight: 500;
+  border: 1px solid rgba(139, 92, 246, 0.5);
+}

@@ -2,6 +2,42 @@ import React, { useState } from 'react'
 import { X, ChevronDown, ChevronRight, GripVertical } from 'lucide-react'
 import { DataSourceIcon } from './DataSourceCard'
 
+// Variable detection utility functions
+const detectVariables = (text) => {
+  if (!text) return []
+  
+  // Regex to match {{variable}}, {variable}, or [variable] patterns
+  const variableRegex = /(\{\{([^}]+)\}\}|\{([^}]+)\}|\[([^\]]+)\])/g
+  const variables = new Set()
+  let match
+  
+  while ((match = variableRegex.exec(text)) !== null) {
+    // Extract the variable name from whichever capture group matched
+    const variableName = match[2] || match[3] || match[4]
+    if (variableName && variableName.trim()) {
+      variables.add(variableName.trim())
+    }
+  }
+  
+  return Array.from(variables)
+}
+
+const highlightVariables = (text) => {
+  if (!text) return text
+  
+  // Replace variables with highlighted spans
+  return text.replace(/(\{\{([^}]+)\}\}|\{([^}]+)\}|\[([^\]]+)\])/g, (match) => {
+    return `<span class="variable-highlight">${match}</span>`
+  })
+}
+
+const getVariableStatus = (variables, mappedVariables = []) => {
+  if (variables.length === 0) return 'none'
+  if (mappedVariables.length === 0) return 'unmapped'
+  if (mappedVariables.length === variables.length) return 'mapped'
+  return 'partial'
+}
+
 const ConnectionPoint = ({ nodeId, type, position, onConnectionStart, onConnectionEnd }) => {
   const handleMouseDown = (e) => {
     e.stopPropagation()
@@ -34,6 +70,15 @@ const ConnectionPoint = ({ nodeId, type, position, onConnectionStart, onConnecti
 const PromptNode = ({ node, onDelete, onUpdate, onConnectionStart, onConnectionEnd, zoomLevel }) => {
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [showVariables, setShowVariables] = useState(false)
+  
+  // Detect variables in prompt content
+  const detectedVariables = React.useMemo(() => {
+    return detectVariables(node.content)
+  }, [node.content])
+  
+  // Get variable status (for future mapping functionality)
+  const variableStatus = getVariableStatus(detectedVariables, node.mappedVariables || [])
 
   const handleMouseDown = (e) => {
     if (e.target.closest('.node-content') || e.target.closest('.node-controls')) {
@@ -239,13 +284,81 @@ const PromptNode = ({ node, onDelete, onUpdate, onConnectionStart, onConnectionE
                 <p className="text-xs text-slate-400 leading-relaxed">
                   {node.content}
                 </p>
+                {/* Variable count and status indicator for prompt nodes */}
+                {node.type !== 'data-source' && detectedVariables.length > 0 && (
+                  <div className="flex items-center space-x-1">
+                    <span 
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center space-x-1 ${
+                        variableStatus === 'mapped' ? 'bg-green-500/20 text-green-300' :
+                        variableStatus === 'partial' ? 'bg-yellow-500/20 text-yellow-300' :
+                        'bg-red-500/20 text-red-300'
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full ${
+                        variableStatus === 'mapped' ? 'bg-green-400' :
+                        variableStatus === 'partial' ? 'bg-yellow-400' :
+                        'bg-red-400'
+                      }`}></span>
+                      <span>{detectedVariables.length} var{detectedVariables.length !== 1 ? 's' : ''}</span>
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
+            <div className="space-y-3">
+              {/* Variables section for prompt nodes */}
+              {detectedVariables.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <button
+                      onClick={() => setShowVariables(!showVariables)}
+                      className="flex items-center space-x-1 text-xs font-medium text-slate-400 hover:text-white transition-colors node-controls"
+                    >
+                      {showVariables ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronRight className="h-3 w-3" />
+                      )}
+                      <span>Variables ({detectedVariables.length})</span>
+                    </button>
+                    <span className={`text-xs px-2 py-0.5 rounded ${
+                      variableStatus === 'mapped' ? 'bg-green-500/20 text-green-300' :
+                      variableStatus === 'partial' ? 'bg-yellow-500/20 text-yellow-300' :
+                      'bg-red-500/20 text-red-300'
+                    }`}>
+                      {variableStatus === 'mapped' ? 'Mapped' :
+                       variableStatus === 'partial' ? 'Partial' :
+                       'Unmapped'}
+                    </span>
+                  </div>
+                  
+                  {showVariables && (
+                    <div className="bg-dark-700 rounded p-2 space-y-1">
+                      {detectedVariables.map((variable, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="text-xs text-slate-300 font-mono bg-dark-600 px-2 py-1 rounded">
+                            {variable}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {node.mappedVariables?.includes(variable) ? '✓ Mapped' : 'Unmapped'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Prompt content with variable highlighting */}
             <div className="bg-dark-700 rounded p-3 max-h-32 overflow-y-auto">
-              <p className="text-xs text-slate-300 leading-relaxed">
-                {node.content}
-              </p>
+                <div 
+                  className="text-xs text-slate-300 leading-relaxed"
+                  dangerouslySetInnerHTML={{ 
+                    __html: highlightVariables(node.content) 
+                  }}
+                />
+            </div>
             </div>
           )}
         </div>
