@@ -81,17 +81,19 @@ const DataSourceCard = ({ dataSource }) => {
   return (
     <div
       ref={setNodeRef}
-      style={style}
       {...listeners}
       {...attributes}
       className={`relative bg-gradient-to-br from-dark-700 to-dark-800 border-2 rounded-lg p-3 cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-lg ${
         isDragging ? 'opacity-50' : ''
       }`}
-      style={{
-        ...style,
-        borderColor: dataSource.brandColor,
-        boxShadow: isDragging ? 'none' : `0 0 10px ${dataSource.brandColor}20`,
-      }}
+      style={(() => {
+        const combinedStyle = {
+          ...style,
+          borderColor: dataSource.brandColor,
+          boxShadow: isDragging ? 'none' : `0 0 10px ${dataSource.brandColor}20`
+        };
+        return combinedStyle;
+      })()}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
