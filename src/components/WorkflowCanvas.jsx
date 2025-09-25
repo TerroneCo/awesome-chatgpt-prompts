@@ -128,7 +128,11 @@ const WorkflowCanvas = ({
         >
             <ConnectionLine
               key={connection.id}
-              connection={updatedConnection}
+              connection={{
+                ...connection,
+                fromPosition,
+                toPosition
+              }}
               isSelected={selectedConnection === connection.id}
               onSelect={onConnectionSelect}
               onDelete={onConnectionDelete}
