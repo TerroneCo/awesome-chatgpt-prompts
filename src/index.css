@@ -60,21 +60,3 @@
 .cursor-grabbing * {
   cursor: grabbing !important;
 }
-/* Connection point hover effects */
-.connection-point {
-  transition: all 0.2s ease;
-}
-
-.connection-point:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-}
-
-/* Connection line animations */
-.connection-line {
-  transition: stroke 0.2s ease;
-}
-
-.connection-line:hover {
-  stroke-width: 3px;
-}

@@ -1,17 +1,7 @@
 import React, { useState } from 'react'
-import { X, ChevronDown, ChevronRight, GripVertical, Play } from 'lucide-react'
+import { X, ChevronDown, ChevronRight, GripVertical } from 'lucide-react'
 
-const PromptNode = ({ 
-  node, 
-  executionOrder, 
-  hasConnections, 
-  onDelete, 
-  onUpdate, 
-  onConnectionStart, 
-  onConnectionEnd, 
-  onRun, 
-  zoomLevel 
-}) => {
+const PromptNode = ({ node, onDelete, onUpdate, zoomLevel }) => {
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
@@ -58,15 +48,11 @@ const PromptNode = ({
     onUpdate(node.id, { isCollapsed: !node.isCollapsed })
   }
 
-  const handleRunNode = (e) => {
-    e.stopPropagation()
-    onRun(node.id)
-  }
   return (
     <div
       className={`absolute bg-dark-800 border border-dark-600 rounded-lg shadow-xl transition-all duration-200 ${
         isDragging ? 'cursor-grabbing shadow-2xl border-primary-500' : 'cursor-grab hover:border-primary-500/50'
-      } ${hasConnections ? 'border-primary-500/30' : ''}`}
+      }`}
       style={{
         left: node.position.x,
         top: node.position.y,
@@ -76,28 +62,12 @@ const PromptNode = ({
       onMouseDown={handleMouseDown}
     >
       {/* Connection Points */}
-      <div 
-        className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-primary-500 rounded-full border-2 border-dark-800 cursor-pointer hover:bg-primary-400 hover:scale-110 transition-all z-10"
-        onMouseDown={(e) => onConnectionStart(node.id, 'input', e)}
-        onMouseUp={(e) => onConnectionEnd(node.id, 'input', e)}
-        title="Input connection point"
-      ></div>
-      <div 
-        className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-secondary-500 rounded-full border-2 border-dark-800 cursor-pointer hover:bg-secondary-400 hover:scale-110 transition-all z-10"
-        onMouseDown={(e) => onConnectionStart(node.id, 'output', e)}
-        onMouseUp={(e) => onConnectionEnd(node.id, 'output', e)}
-        title="Output connection point"
-      ></div>
+      <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-primary-500 rounded-full border-2 border-dark-800 cursor-pointer hover:bg-primary-400 transition-colors"></div>
+      <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-secondary-500 rounded-full border-2 border-dark-800 cursor-pointer hover:bg-secondary-400 transition-colors"></div>
 
       {/* Node Header */}
       <div className="flex items-center justify-between p-3 border-b border-dark-700">
         <div className="flex items-center space-x-2 flex-1 min-w-0">
-          {/* Execution Order Badge */}
-          {executionOrder > 0 && (
-            <div className="bg-primary-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-              {executionOrder}
-            </div>
-          )}
           <button
             onClick={toggleCollapse}
             className="text-slate-400 hover:text-white transition-colors node-controls"
@@ -117,13 +87,6 @@ const PromptNode = ({
         </div>
         
         <div className="flex items-center space-x-1">
-          <button
-            onClick={handleRunNode}
-            className="text-slate-400 hover:text-green-400 transition-colors p-1 node-controls"
-            title="Test this node"
-          >
-            <Play className="h-3 w-3" />
-          </button>
           <GripVertical className="h-4 w-4 text-slate-500" />
           <button
             onClick={() => onDelete(node.id)}
@@ -154,7 +117,5 @@ const PromptNode = ({
     </div>
   )
 }
-
-export default PromptNode
 
 export default PromptNode
