@@ -60,3 +60,22 @@
 .cursor-grabbing * {
   cursor: grabbing !important;
 }
+
+/* Connection point styles */
+.connection-point {
+  transition: all 0.2s ease;
+}
+
+.connection-point:hover {
+  transform: scale(1.5) translateY(-50%);
+}
+
+/* SVG connection lines */
+svg path {
+  pointer-events: stroke;
+  stroke-linecap: round;
+}
+
+svg path:hover {
+  stroke-width: 3;
+}

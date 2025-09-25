@@ -11,6 +11,10 @@ const WorkflowBuilder = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [canvasNodes, setCanvasNodes] = useState([])
+  const [connections, setConnections] = useState([])
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [connectionStart, setConnectionStart] = useState(null)
+  const [tempConnection, setTempConnection] = useState(null)
   const [activeId, setActiveId] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(1)
   const [draggedPrompt, setDraggedPrompt] = useState(null)
@@ -172,6 +176,76 @@ const WorkflowBuilder = () => {
       node.id === nodeId ? { ...node, ...updates } : node
     ))
   }
+
+  const handleConnectionStart = (nodeId, type, position) => {
+    setIsConnecting(true)
+    setConnectionStart({ nodeId, type, position })
+  }
+
+  const handleConnectionEnd = (nodeId, type, position) => {
+    if (isConnecting && connectionStart) {
+      // Validate connection
+      if (connectionStart.nodeId !== nodeId && 
+          connectionStart.type !== type &&
+          connectionStart.type === 'output' && type === 'input') {
+        
+        // Check if connection already exists
+        const existingConnection = connections.find(conn => 
+          conn.from === connectionStart.nodeId && conn.to === nodeId
+        )
+        
+        if (!existingConnection) {
+          const newConnection = {
+            id: `conn-${Date.now()}`,
+            from: connectionStart.nodeId,
+            to: nodeId,
+            fromPosition: connectionStart.position,
+            toPosition: position
+          }
+          setConnections(prev => [...prev, newConnection])
+        }
+      }
+    }
+    
+    setIsConnecting(false)
+    setConnectionStart(null)
+    setTempConnection(null)
+  }
+
+  const handleConnectionCancel = () => {
+    setIsConnecting(false)
+    setConnectionStart(null)
+    setTempConnection(null)
+  }
+
+  const handleConnectionDelete = (connectionId) => {
+    setConnections(prev => prev.filter(conn => conn.id !== connectionId))
+  }
+
+  const handleMouseMove = (e) => {
+    if (isConnecting && connectionStart) {
+      const canvasRect = document.querySelector('.workflow-canvas').getBoundingClientRect()
+      const x = (e.clientX - canvasRect.left) / zoomLevel
+      const y = (e.clientY - canvasRect.top) / zoomLevel
+      
+      setTempConnection({
+        from: connectionStart.position,
+        to: { x, y }
+      })
+    }
+  }
+
+  useEffect(() => {
+    if (isConnecting) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('click', handleConnectionCancel)
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('click', handleConnectionCancel)
+      }
+    }
+  }, [isConnecting, connectionStart, zoomLevel])
 
   return (
     <div className="h-screen flex bg-dark-900 pt-16">

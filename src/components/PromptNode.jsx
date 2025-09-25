@@ -1,7 +1,36 @@
 import React, { useState } from 'react'
 import { X, ChevronDown, ChevronRight, GripVertical } from 'lucide-react'
 
-const PromptNode = ({ node, onDelete, onUpdate, zoomLevel }) => {
+const ConnectionPoint = ({ nodeId, type, position, onConnectionStart, onConnectionEnd }) => {
+  const handleMouseDown = (e) => {
+    e.stopPropagation()
+    onConnectionStart(nodeId, type, position)
+  }
+  
+  const handleMouseUp = (e) => {
+    e.stopPropagation()
+    onConnectionEnd(nodeId, type, position)
+  }
+  
+  return (
+    <div
+      className={`absolute w-2 h-2 rounded-full border-2 cursor-pointer transition-all duration-200 hover:scale-150 z-10 ${
+        type === 'input' 
+          ? 'bg-blue-500 border-blue-400 -left-1 hover:bg-blue-400' 
+          : 'bg-purple-500 border-purple-400 -right-1 hover:bg-purple-400'
+      }`}
+      style={{
+        top: '50%',
+        transform: 'translateY(-50%)',
+      }}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      title={type === 'input' ? 'Input connection point' : 'Output connection point'}
+    />
+  )
+}
+
+const PromptNode = ({ node, onDelete, onUpdate, onConnectionStart, onConnectionEnd, zoomLevel }) => {
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
@@ -48,6 +77,16 @@ const PromptNode = ({ node, onDelete, onUpdate, zoomLevel }) => {
     onUpdate(node.id, { isCollapsed: !node.isCollapsed })
   }
 
+  // Calculate connection point positions
+  const inputPosition = {
+    x: node.position.x,
+    y: node.position.y + (node.isCollapsed ? 30 : node.size.height / 2)
+  }
+  
+  const outputPosition = {
+    x: node.position.x + node.size.width,
+    y: node.position.y + (node.isCollapsed ? 30 : node.size.height / 2)
+  }
   return (
     <div
       className={`absolute bg-dark-800 border border-dark-600 rounded-lg shadow-xl transition-all duration-200 ${
@@ -58,12 +97,25 @@ const PromptNode = ({ node, onDelete, onUpdate, zoomLevel }) => {
         top: node.position.y,
         width: node.size.width,
         minHeight: node.isCollapsed ? 'auto' : node.size.height,
+        zIndex: 2,
       }}
       onMouseDown={handleMouseDown}
     >
       {/* Connection Points */}
-      <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-primary-500 rounded-full border-2 border-dark-800 cursor-pointer hover:bg-primary-400 transition-colors"></div>
-      <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-secondary-500 rounded-full border-2 border-dark-800 cursor-pointer hover:bg-secondary-400 transition-colors"></div>
+      <ConnectionPoint
+        nodeId={node.id}
+        type="input"
+        position={inputPosition}
+        onConnectionStart={onConnectionStart}
+        onConnectionEnd={onConnectionEnd}
+      />
+      <ConnectionPoint
+        nodeId={node.id}
+        type="output"
+        position={outputPosition}
+        onConnectionStart={onConnectionStart}
+        onConnectionEnd={onConnectionEnd}
+      />
 
       {/* Node Header */}
       <div className="flex items-center justify-between p-3 border-b border-dark-700">
