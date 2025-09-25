@@ -126,29 +126,30 @@ const WorkflowCanvas = ({
           className="absolute inset-0 w-full h-full pointer-events-none"
           style={{ zIndex: 1 }}
         >
-          // Calculate real-time positions based on current node positions
-          const fromNode = nodes.find(n => n.id === connection.from)
-          const toNode = nodes.find(n => n.id === connection.to)
-          
-          if (!fromNode || !toNode) return null
-          
-          const fromPosition = {
-            x: fromNode.position.x + fromNode.size.width,
-            y: fromNode.position.y + (fromNode.isCollapsed ? 30 : fromNode.size.height / 2)
-          }
-          
-          const toPosition = {
-            x: toNode.position.x,
-            y: toNode.position.y + (toNode.isCollapsed ? 30 : toNode.size.height / 2)
-          }
-          
-          const updatedConnection = {
-            ...connection,
-            fromPosition,
-            toPosition
-          }
-          
           {connections.map((connection) => (
+            // Calculate real-time positions based on current node positions
+            const fromNode = nodes.find(n => n.id === connection.from)
+            const toNode = nodes.find(n => n.id === connection.to)
+            
+            if (!fromNode || !toNode) return null
+            
+            const fromPosition = {
+              x: fromNode.position.x + fromNode.size.width,
+              y: fromNode.position.y + (fromNode.isCollapsed ? 30 : fromNode.size.height / 2)
+            }
+            
+            const toPosition = {
+              x: toNode.position.x,
+              y: toNode.position.y + (toNode.isCollapsed ? 30 : toNode.size.height / 2)
+            }
+            
+            const updatedConnection = {
+              ...connection,
+              fromPosition,
+              toPosition
+            }
+            
+            return (
             <ConnectionLine
               key={connection.id}
               connection={updatedConnection}
@@ -156,6 +157,7 @@ const WorkflowCanvas = ({
               onSelect={onConnectionSelect}
               onDelete={onConnectionDelete}
             />
+            )
           ))}
           <TempConnectionLine tempConnection={tempConnection} />
         </svg>
