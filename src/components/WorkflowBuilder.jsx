@@ -4,6 +4,8 @@ import { Search, Plus, Minus, Save, Play, X, ChevronDown, ChevronRight } from 'l
 import PromptLibrary from './PromptLibrary'
 import WorkflowCanvas from './WorkflowCanvas'
 import PromptNode from './PromptNode'
+import DataSourceCard from './DataSourceCard'
+import { DataSourceIcon } from './DataSourceCard'
 
 const WorkflowBuilder = () => {
   const [prompts, setPrompts] = useState([])
