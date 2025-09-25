@@ -176,6 +176,38 @@ const WorkflowBuilder = () => {
     setCanvasNodes(prev => prev.map(node => 
       node.id === nodeId ? { ...node, ...updates } : node
     ))
+    
+    // Update connection positions when nodes move
+    if (updates.position) {
+      setConnections(prev => prev.map(connection => {
+        const updatedConnection = { ...connection }
+        
+        // Update connection positions based on node movement
+        if (connection.from === nodeId) {
+          const updatedNode = canvasNodes.find(n => n.id === nodeId)
+          if (updatedNode) {
+            const newNode = { ...updatedNode, ...updates }
+            updatedConnection.fromPosition = {
+              x: newNode.position.x + newNode.size.width,
+              y: newNode.position.y + newNode.size.height / 2
+            }
+          }
+        }
+        
+        if (connection.to === nodeId) {
+          const updatedNode = canvasNodes.find(n => n.id === nodeId)
+          if (updatedNode) {
+            const newNode = { ...updatedNode, ...updates }
+            updatedConnection.toPosition = {
+              x: newNode.position.x,
+              y: newNode.position.y + newNode.size.height / 2
+            }
+          }
+        }
+        
+        return updatedConnection
+      }))
+    }
   }
 
   const handleConnectionStart = (nodeId, type, position) => {
