@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
-import { Search, Plus, Minus, Save, Play, X, ChevronDown, ChevronRight } from 'lucide-react'
+import { Search, Plus, Minus, Save, Play, X, ChevronDown, ChevronRight, CheckCircle } from 'lucide-react'
 import PromptLibrary from './PromptLibrary'
 import WorkflowCanvas from './WorkflowCanvas'
 import PromptNode from './PromptNode'
+import ConnectionLayer from './ConnectionLayer'
 
 const WorkflowBuilder = () => {
   const [prompts, setPrompts] = useState([])
@@ -11,6 +12,12 @@ const WorkflowBuilder = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [canvasNodes, setCanvasNodes] = useState([])
+  const [connections, setConnections] = useState([])
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [connectionStart, setConnectionStart] = useState(null)
+  const [tempConnection, setTempConnection] = useState(null)
+  const [workflowName, setWorkflowName] = useState('Untitled Workflow')
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false)
   const [activeId, setActiveId] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(1)
   const [draggedPrompt, setDraggedPrompt] = useState(null)
@@ -173,6 +180,171 @@ const WorkflowBuilder = () => {
     ))
   }
 
+  const handleConnectionStart = (nodeId, type, event) => {
+    event.stopPropagation()
+    setIsConnecting(true)
+    setConnectionStart({ nodeId, type })
+  }
+
+  const handleConnectionEnd = (nodeId, type, event) => {
+    event.stopPropagation()
+    
+    if (!isConnecting || !connectionStart) return
+    
+    // Validation rules
+    if (connectionStart.nodeId === nodeId) {
+      // Can't connect to self
+      setIsConnecting(false)
+      setConnectionStart(null)
+      setTempConnection(null)
+      return
+    }
+    
+    if (connectionStart.type === type) {
+      // Can't connect same types (output to output, input to input)
+      setIsConnecting(false)
+      setConnectionStart(null)
+      setTempConnection(null)
+      return
+    }
+    
+    // Determine source and target
+    const sourceNodeId = connectionStart.type === 'output' ? connectionStart.nodeId : nodeId
+    const targetNodeId = connectionStart.type === 'output' ? nodeId : connectionStart.nodeId
+    
+    // Check if connection already exists
+    const existingConnection = connections.find(conn => 
+      conn.source === sourceNodeId && conn.target === targetNodeId
+    )
+    
+    if (existingConnection) {
+      setIsConnecting(false)
+      setConnectionStart(null)
+      setTempConnection(null)
+      return
+    }
+    
+    // Check if source already has a connection (only one output per node)
+    const existingOutput = connections.find(conn => conn.source === sourceNodeId)
+    if (existingOutput) {
+      // Remove existing connection
+      setConnections(prev => prev.filter(conn => conn.source !== sourceNodeId))
+    }
+    
+    // Create new connection
+    const newConnection = {
+      id: `conn-${Date.now()}`,
+      source: sourceNodeId,
+      target: targetNodeId
+    }
+    
+    setConnections(prev => [...prev, newConnection])
+    setIsConnecting(false)
+    setConnectionStart(null)
+    setTempConnection(null)
+  }
+
+  const handleMouseMove = (event) => {
+    if (isConnecting && connectionStart) {
+      const rect = event.currentTarget.getBoundingClientRect()
+      const x = (event.clientX - rect.left) / zoomLevel
+      const y = (event.clientY - rect.top) / zoomLevel
+      
+      const sourceNode = canvasNodes.find(n => n.id === connectionStart.nodeId)
+      if (sourceNode) {
+        const sourceX = connectionStart.type === 'output' 
+          ? sourceNode.position.x + sourceNode.size.width 
+          : sourceNode.position.x
+        const sourceY = sourceNode.position.y + sourceNode.size.height / 2
+        
+        setTempConnection({
+          start: { x: sourceX, y: sourceY },
+          end: { x, y }
+        })
+      }
+    }
+  }
+
+  const handleCanvasClick = () => {
+    if (isConnecting) {
+      setIsConnecting(false)
+      setConnectionStart(null)
+      setTempConnection(null)
+    }
+  }
+
+  const handleDeleteConnection = (connectionId) => {
+    setConnections(prev => prev.filter(conn => conn.id !== connectionId))
+  }
+
+  const getExecutionOrder = () => {
+    const visited = new Set()
+    const order = []
+    
+    const visit = (nodeId) => {
+      if (visited.has(nodeId)) return
+      visited.add(nodeId)
+      
+      // Visit all nodes that this node depends on (inputs)
+      const inputConnections = connections.filter(conn => conn.target === nodeId)
+      inputConnections.forEach(conn => visit(conn.source))
+      
+      order.push(nodeId)
+    }
+    
+    // Start with nodes that have no inputs (root nodes)
+    const rootNodes = canvasNodes.filter(node => 
+      !connections.some(conn => conn.target === node.id)
+    )
+    
+    rootNodes.forEach(node => visit(node.id))
+    
+    // Visit any remaining unvisited nodes
+    canvasNodes.forEach(node => {
+      if (!visited.has(node.id)) {
+        visit(node.id)
+      }
+    })
+    
+    return order
+  }
+
+  const handleSaveWorkflow = () => {
+    const workflow = {
+      name: workflowName,
+      nodes: canvasNodes,
+      connections: connections,
+      executionOrder: getExecutionOrder(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    
+    // Save to localStorage
+    const savedWorkflows = JSON.parse(localStorage.getItem('workflows') || '[]')
+    const existingIndex = savedWorkflows.findIndex(w => w.name === workflowName)
+    
+    if (existingIndex >= 0) {
+      savedWorkflows[existingIndex] = workflow
+    } else {
+      savedWorkflows.push(workflow)
+    }
+    
+    localStorage.setItem('workflows', JSON.stringify(savedWorkflows))
+    
+    // Show success message
+    setShowSaveSuccess(true)
+    setTimeout(() => setShowSaveSuccess(false), 3000)
+  }
+
+  const handleRunWorkflow = () => {
+    const executionOrder = getExecutionOrder()
+    console.log('Workflow execution order:', executionOrder)
+    console.log('Nodes:', canvasNodes)
+    console.log('Connections:', connections)
+    
+    // TODO: Implement actual workflow execution
+    alert(`Workflow "${workflowName}" would execute ${executionOrder.length} nodes in order: ${executionOrder.join(' → ')}`)
+  }
   return (
     <div className="h-screen flex bg-dark-900 pt-16">
       <DndContext
@@ -220,7 +392,18 @@ const WorkflowBuilder = () => {
           {/* Top Toolbar */}
           <div className="h-14 bg-dark-800 border-b border-dark-700 flex items-center justify-between px-4">
             <div className="flex items-center space-x-4">
-              <h1 className="text-lg font-semibold text-white">Workflow Builder</h1>
+              <input
+                type="text"
+                value={workflowName}
+                onChange={(e) => setWorkflowName(e.target.value)}
+                placeholder="Workflow Name"
+              />
+              {showSaveSuccess && (
+                <div className="flex items-center space-x-2 text-green-400 text-sm">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Saved!</span>
+                </div>
+              )}
             </div>
             
             <div className="flex items-center space-x-4">
@@ -244,7 +427,10 @@ const WorkflowBuilder = () => {
               </div>
 
               {/* Action Buttons */}
-              <button className="btn-secondary flex items-center space-x-2">
+              <button 
+                onClick={handleSaveWorkflow}
+                className="btn-secondary flex items-center space-x-2"
+              >
                 <Save className="h-4 w-4" />
                 <span>Save</span>
               </button>
@@ -258,9 +444,17 @@ const WorkflowBuilder = () => {
           {/* Canvas */}
           <WorkflowCanvas
             nodes={canvasNodes}
+            connections={connections}
+            tempConnection={tempConnection}
+            executionOrder={executionOrder}
             zoomLevel={zoomLevel}
             onDeleteNode={handleDeleteNode}
             onUpdateNode={handleUpdateNode}
+            onConnectionStart={handleConnectionStart}
+            onConnectionEnd={handleConnectionEnd}
+            onDeleteConnection={handleDeleteConnection}
+            onCanvasClick={handleCanvasClick}
+            onRunNode={handleRunNode}
           />
         </div>
 

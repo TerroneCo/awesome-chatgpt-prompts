@@ -1,8 +1,22 @@
 import React from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import PromptNode from './PromptNode'
+import ConnectionLayer from './ConnectionLayer'
 
-const WorkflowCanvas = ({ nodes, zoomLevel, onDeleteNode, onUpdateNode }) => {
+const WorkflowCanvas = ({ 
+  nodes, 
+  connections, 
+  tempConnection, 
+  executionOrder,
+  zoomLevel, 
+  onDeleteNode, 
+  onUpdateNode,
+  onConnectionStart,
+  onConnectionEnd,
+  onDeleteConnection,
+  onCanvasClick,
+  onRunNode
+}) => {
   const { setNodeRef } = useDroppable({
     id: 'canvas-drop-zone',
   })
@@ -12,6 +26,7 @@ const WorkflowCanvas = ({ nodes, zoomLevel, onDeleteNode, onUpdateNode }) => {
       <div
         ref={setNodeRef}
         className="w-full h-full relative"
+        onClick={onCanvasClick}
         style={{
           backgroundImage: `
             radial-gradient(circle, #374151 1px, transparent 1px)
@@ -42,11 +57,24 @@ const WorkflowCanvas = ({ nodes, zoomLevel, onDeleteNode, onUpdateNode }) => {
           <PromptNode
             key={node.id}
             node={node}
+            executionOrder={executionOrder.indexOf(node.id) + 1}
+            hasConnections={connections.some(conn => conn.source === node.id || conn.target === node.id)}
             onDelete={onDeleteNode}
             onUpdate={onUpdateNode}
+            onConnectionStart={onConnectionStart}
+            onConnectionEnd={onConnectionEnd}
+            onRun={onRunNode}
             zoomLevel={zoomLevel}
           />
         ))}
+
+        {/* Connection Layer */}
+        <ConnectionLayer
+          connections={connections}
+          tempConnection={tempConnection}
+          nodes={nodes}
+          onDeleteConnection={onDeleteConnection}
+        />
       </div>
     </div>
   )
