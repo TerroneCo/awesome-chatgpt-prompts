@@ -44,6 +44,9 @@ export default {
           900: '#0f172a',
         }
       },
+      borderColor: {
+        border: 'rgb(51 65 85)', // slate-700 for dark theme
+      },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
