@@ -23,55 +23,81 @@ const WorkflowBuilder = () => {
     })
   )
 
-  // Parse prompts from README data (simulated for now)
+  // Parse prompts from actual README data
   useEffect(() => {
-    const samplePrompts = [
-      {
-        id: 1,
-        title: "Linux Terminal",
-        category: "Development",
-        description: "Act as a linux terminal and execute commands",
-        content: "I want you to act as a linux terminal. I will type commands and you will reply with what the terminal should show."
-      },
-      {
-        id: 2,
-        title: "JavaScript Console",
-        category: "Development", 
-        description: "Act as a JavaScript console for code execution",
-        content: "I want you to act as a javascript console. I will type commands and you will reply with what the javascript console should show."
-      },
-      {
-        id: 3,
-        title: "English Translator",
-        category: "Language",
-        description: "Translate and improve English text",
-        content: "I want you to act as an English translator, spelling corrector and improver."
-      },
-      {
-        id: 4,
-        title: "Excel Sheet",
-        category: "Productivity",
-        description: "Act as a text-based Excel sheet",
-        content: "I want you to act as a text based excel. You'll only reply me the text-based 10 rows excel sheet with row numbers and cell letters as columns."
-      },
-      {
-        id: 5,
-        title: "Travel Guide",
-        category: "Lifestyle",
-        description: "Provide travel recommendations and guidance",
-        content: "I want you to act as a travel guide. I will write you my location and you will suggest a place to visit near my location."
-      },
-      {
-        id: 6,
-        title: "Personal Trainer",
-        category: "Health",
-        description: "Create fitness and nutrition plans",
-        content: "I want you to act as a personal trainer. I will provide you with all the information needed about an individual looking to become fitter."
+    const loadPromptsFromCSV = async () => {
+      try {
+        const response = await fetch('/prompts.csv')
+        const csvText = await response.text()
+        
+        // Parse CSV data
+        const lines = csvText.split('\n')
+        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim())
+        
+        const parsedPrompts = lines.slice(1)
+          .filter(line => line.trim())
+          .map((line, index) => {
+            // Handle CSV parsing with quoted fields
+            const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || []
+            const cleanValues = values.map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"'))
+            
+            if (cleanValues.length >= 2) {
+              const title = cleanValues[0] || `Prompt ${index + 1}`
+              const content = cleanValues[1] || ''
+              
+              // Extract category from title or content
+              let category = 'General'
+              if (title.toLowerCase().includes('developer') || title.toLowerCase().includes('code') || title.toLowerCase().includes('programming')) {
+                category = 'Development'
+              } else if (title.toLowerCase().includes('writer') || title.toLowerCase().includes('content') || title.toLowerCase().includes('essay')) {
+                category = 'Writing'
+              } else if (title.toLowerCase().includes('teacher') || title.toLowerCase().includes('tutor') || title.toLowerCase().includes('explain')) {
+                category = 'Education'
+              } else if (title.toLowerCase().includes('business') || title.toLowerCase().includes('consultant') || title.toLowerCase().includes('analyst')) {
+                category = 'Business'
+              } else if (title.toLowerCase().includes('creative') || title.toLowerCase().includes('artist') || title.toLowerCase().includes('design')) {
+                category = 'Creative'
+              }
+              
+              return {
+                id: index + 1,
+                title: title.replace(/^Act as (?:a |an )?/i, ''),
+                category,
+                description: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
+                content: content
+              }
+            }
+            return null
+          })
+          .filter(Boolean)
+        
+        setPrompts(parsedPrompts)
+        setFilteredPrompts(parsedPrompts)
+      } catch (error) {
+        console.error('Error loading prompts:', error)
+        // Fallback to a few sample prompts if CSV fails to load
+        const fallbackPrompts = [
+          {
+            id: 1,
+            title: "Linux Terminal",
+            category: "Development",
+            description: "Act as a linux terminal and execute commands",
+            content: "I want you to act as a linux terminal. I will type commands and you will reply with what the terminal should show."
+          },
+          {
+            id: 2,
+            title: "English Translator",
+            category: "Language",
+            description: "Translate and improve English text",
+            content: "I want you to act as an English translator, spelling corrector and improver."
+          }
+        ]
+        setPrompts(fallbackPrompts)
+        setFilteredPrompts(fallbackPrompts)
       }
-    ]
+    }
     
-    setPrompts(samplePrompts)
-    setFilteredPrompts(samplePrompts)
+    loadPromptsFromCSV()
   }, [])
 
   // Filter prompts based on search and category
