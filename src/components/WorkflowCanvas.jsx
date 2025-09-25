@@ -2,7 +2,7 @@ import React from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import PromptNode from './PromptNode'
 
-const ConnectionLine = ({ connection, onDelete }) => {
+const ConnectionLine = ({ connection, isSelected, onSelect, onDelete }) => {
   const { fromPosition, toPosition } = connection
   
   // Calculate control points for bezier curve
@@ -14,18 +14,32 @@ const ConnectionLine = ({ connection, onDelete }) => {
   
   return (
     <g>
+      {/* Invisible wider path for easier clicking */}
       <path
         d={pathData}
-        stroke="#3B82F6"
-        strokeWidth="2"
+        stroke="transparent"
+        strokeWidth="12"
         fill="none"
-        className="cursor-pointer hover:stroke-primary-400 transition-colors"
-        onClick={() => onDelete(connection.id)}
+        className="cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation()
+          onSelect(connection.id)
+        }}
+      />
+      <path
+        d={pathData}
+        stroke={isSelected ? "#EF4444" : "#3B82F6"}
+        strokeWidth={isSelected ? "3" : "2"}
+        fill="none"
+        className="cursor-pointer hover:stroke-opacity-80 transition-all duration-200 pointer-events-none"
+        style={{
+          filter: isSelected ? 'drop-shadow(0 0 4px rgba(239, 68, 68, 0.5))' : 'none'
+        }}
       />
       {/* Arrow marker */}
       <defs>
         <marker
-          id="arrowhead"
+          id={`arrowhead-${connection.id}`}
           markerWidth="10"
           markerHeight="7"
           refX="9"
@@ -34,16 +48,16 @@ const ConnectionLine = ({ connection, onDelete }) => {
         >
           <polygon
             points="0 0, 10 3.5, 0 7"
-            fill="#3B82F6"
+            fill={isSelected ? "#EF4444" : "#3B82F6"}
           />
         </marker>
       </defs>
       <path
         d={pathData}
-        stroke="#3B82F6"
-        strokeWidth="2"
+        stroke={isSelected ? "#EF4444" : "#3B82F6"}
+        strokeWidth={isSelected ? "3" : "2"}
         fill="none"
-        markerEnd="url(#arrowhead)"
+        markerEnd={`url(#arrowhead-${connection.id})`}
         pointerEvents="none"
       />
     </g>
@@ -77,11 +91,13 @@ const WorkflowCanvas = ({
   nodes, 
   connections, 
   tempConnection, 
+  selectedConnection,
   zoomLevel, 
   onDeleteNode, 
   onUpdateNode, 
   onConnectionStart, 
   onConnectionEnd, 
+  onConnectionSelect,
   onConnectionDelete 
 }) => {
   const { setNodeRef } = useDroppable({
@@ -89,7 +105,10 @@ const WorkflowCanvas = ({
   })
 
   return (
-    <div className="flex-1 overflow-hidden bg-dark-900 relative">
+    <div 
+      className="flex-1 overflow-hidden bg-dark-900 relative"
+      onClick={() => onConnectionSelect(null)} // Deselect when clicking on canvas
+    >
       <div
         ref={setNodeRef}
         className="w-full h-full relative workflow-canvas"
@@ -111,6 +130,8 @@ const WorkflowCanvas = ({
             <ConnectionLine
               key={connection.id}
               connection={connection}
+              isSelected={selectedConnection === connection.id}
+              onSelect={onConnectionSelect}
               onDelete={onConnectionDelete}
             />
           ))}

@@ -18,6 +18,7 @@ const WorkflowBuilder = () => {
   const [activeId, setActiveId] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(1)
   const [draggedPrompt, setDraggedPrompt] = useState(null)
+  const [selectedConnection, setSelectedConnection] = useState(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -218,9 +219,30 @@ const WorkflowBuilder = () => {
     setTempConnection(null)
   }
 
+  const handleConnectionSelect = (connectionId) => {
+    setSelectedConnection(connectionId)
+  }
+
   const handleConnectionDelete = (connectionId) => {
     setConnections(prev => prev.filter(conn => conn.id !== connectionId))
+    setSelectedConnection(null)
   }
+
+  // Handle keyboard events for deleting selected connections
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedConnection) {
+        e.preventDefault()
+        handleConnectionDelete(selectedConnection)
+      }
+      if (e.key === 'Escape') {
+        setSelectedConnection(null)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [selectedConnection])
 
   const handleMouseMove = (e) => {
     if (isConnecting && connectionStart) {
@@ -335,10 +357,12 @@ const WorkflowBuilder = () => {
             zoomLevel={zoomLevel}
             connections={connections}
             tempConnection={tempConnection}
+            selectedConnection={selectedConnection}
             onDeleteNode={handleDeleteNode}
             onUpdateNode={handleUpdateNode}
             onConnectionStart={handleConnectionStart}
             onConnectionEnd={handleConnectionEnd}
+            onConnectionSelect={handleConnectionSelect}
             onConnectionDelete={handleConnectionDelete}
           />
         </div>

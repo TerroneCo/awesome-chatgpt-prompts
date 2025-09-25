@@ -76,6 +76,7 @@ svg path {
   stroke-linecap: round;
 }
 
-svg path:hover {
-  stroke-width: 3;
+/* Selected connection styles */
+.connection-selected {
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
 }
