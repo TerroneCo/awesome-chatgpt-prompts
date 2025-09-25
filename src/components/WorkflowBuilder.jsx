@@ -4,7 +4,7 @@ import { Search, Plus, Minus, Save, Play, X, ChevronDown, ChevronRight, CheckCir
 import PromptLibrary from './PromptLibrary'
 import WorkflowCanvas from './WorkflowCanvas'
 import PromptNode from './PromptNode'
-import ConnectionLayer from './ConnectionLayer'
+import ConnectionLayer from './ConnectionLayer.jsx'
 
 const WorkflowBuilder = () => {
   const [prompts, setPrompts] = useState([])
