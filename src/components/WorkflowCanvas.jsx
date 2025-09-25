@@ -26,16 +26,6 @@ const ConnectionLine = ({ connection, isSelected, onSelect, onDelete }) => {
           onSelect(connection.id)
         }}
       />
-      <path
-        d={pathData}
-        stroke={isSelected ? "#EF4444" : "#3B82F6"}
-        strokeWidth={isSelected ? "3" : "2"}
-        fill="none"
-        className="cursor-pointer hover:stroke-opacity-80 transition-all duration-200 pointer-events-none"
-        style={{
-          filter: isSelected ? 'drop-shadow(0 0 4px rgba(239, 68, 68, 0.5))' : 'none'
-        }}
-      />
       {/* Arrow marker */}
       <defs>
         <marker
@@ -52,13 +42,17 @@ const ConnectionLine = ({ connection, isSelected, onSelect, onDelete }) => {
           />
         </marker>
       </defs>
+      {/* Visible connection line */}
       <path
         d={pathData}
         stroke={isSelected ? "#EF4444" : "#3B82F6"}
         strokeWidth={isSelected ? "3" : "2"}
         fill="none"
         markerEnd={`url(#arrowhead-${connection.id})`}
-        pointerEvents="none"
+        className="pointer-events-none"
+        style={{
+          filter: isSelected ? 'drop-shadow(0 0 4px rgba(239, 68, 68, 0.5))' : 'none'
+        }}
       />
     </g>
   )
@@ -104,10 +98,56 @@ const WorkflowCanvas = ({
     id: 'canvas-drop-zone',
   })
 
+  // Calculate dynamic connection positions based on current node positions
+  const getConnectionsWithPositions = () => {
+    if (!connections || !nodes) return []
+    
+    return connections.map(connection => {
+      // Find the source and target nodes
+      const fromNode = nodes.find(n => n.id === connection.from)
+      const toNode = nodes.find(n => n.id === connection.to)
+      
+      // Skip connections where nodes don't exist (error handling)
+      if (!fromNode || !toNode) {
+        console.warn(`Connection ${connection.id} references missing nodes:`, {
+          from: connection.from,
+          to: connection.to,
+          fromNodeExists: !!fromNode,
+          toNodeExists: !!toNode
+        })
+        return null
+      }
+      
+      // Calculate node dimensions (use default if not specified)
+      const fromNodeWidth = fromNode.size?.width || 300
+      const fromNodeHeight = fromNode.isCollapsed ? 60 : (fromNode.size?.height || 200)
+      const toNodeHeight = toNode.isCollapsed ? 60 : (toNode.size?.height || 200)
+      
+      // Calculate connection endpoints
+      const fromPosition = {
+        x: fromNode.position.x + fromNodeWidth, // Right edge of source node
+        y: fromNode.position.y + fromNodeHeight / 2 // Middle of source node
+      }
+      
+      const toPosition = {
+        x: toNode.position.x, // Left edge of target node
+        y: toNode.position.y + toNodeHeight / 2 // Middle of target node
+      }
+      
+      return {
+        ...connection,
+        fromPosition,
+        toPosition
+      }
+    }).filter(Boolean) // Remove null entries from missing nodes
+  }
+
+  const connectionsWithPositions = getConnectionsWithPositions()
+
   return (
     <div 
       className="flex-1 overflow-hidden bg-dark-900 relative"
-      onClick={() => onConnectionSelect(null)} // Deselect when clicking on canvas
+      onClick={() => onConnectionSelect && onConnectionSelect(null)} // Deselect when clicking on canvas
     >
       <div
         ref={setNodeRef}
@@ -126,25 +166,24 @@ const WorkflowCanvas = ({
           className="absolute inset-0 w-full h-full pointer-events-none"
           style={{ zIndex: 1 }}
         >
+          {/* Render all connections with dynamic positions */}
+          {connectionsWithPositions.map((connection) => (
             <ConnectionLine
               key={connection.id}
-              connection={{
-                ...connection,
-                fromPosition,
-                toPosition
-              }}
+              connection={connection}
               isSelected={selectedConnection === connection.id}
               onSelect={onConnectionSelect}
               onDelete={onConnectionDelete}
             />
-             )
-           })}
+          ))}
+          
+          {/* Render temporary connection during creation */}
           <TempConnectionLine tempConnection={tempConnection} />
         </svg>
 
         {/* Drop Zone Indicator */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {nodes.length === 0 && (
+          {nodes && nodes.length === 0 && (
             <div className="text-center">
               <div className="bg-dark-800 border-2 border-dashed border-dark-600 rounded-xl p-8 max-w-md">
                 <h3 className="text-lg font-medium text-slate-300 mb-2">
@@ -159,7 +198,7 @@ const WorkflowCanvas = ({
         </div>
 
         {/* Render Nodes */}
-        {nodes.map((node) => (
+        {nodes && nodes.map((node) => (
           <PromptNode
             key={node.id}
             node={node}
