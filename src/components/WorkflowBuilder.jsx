@@ -12,60 +12,48 @@ const WorkflowBuilder = () => {
   const [filteredPrompts, setFilteredPrompts] = useState([])
   const [dataSources] = useState([
     {
-      id: 'clay-table',
-      title: 'Clay Table',
+      id: 'project-config',
+      title: 'Project Config',
       type: 'data-source',
-      category: 'Clay',
-      description: 'Import enriched company data from Clay tables',
-      icon: 'database',
-      brandColor: '#FF6B35',
-      fields: ['Company Name', 'Industry', 'Employee Count', 'Website', 'Revenue'],
-      isRealtime: false
-    },
-    {
-      id: 'hubspot-contacts',
-      title: 'HubSpot Contacts',
-      type: 'data-source',
-      category: 'HubSpot',
-      description: 'Sync contacts and deals from HubSpot CRM',
-      icon: 'users',
-      brandColor: '#FF7A59',
-      fields: ['Contact Name', 'Email', 'Company', 'Deal Stage', 'Last Activity'],
-      isRealtime: false
-    },
-    {
-      id: 'salesforce-leads',
-      title: 'Salesforce Leads',
-      type: 'data-source',
-      category: 'Salesforce',
-      description: 'Import leads and opportunities from Salesforce',
-      icon: 'briefcase',
-      brandColor: '#00A1E0',
-      fields: ['Lead Name', 'Company', 'Status', 'Source', 'Score'],
-      isRealtime: false
-    },
-    {
-      id: 'webhook-trigger',
-      title: 'Webhook Trigger',
-      type: 'data-source',
-      category: 'Real-time',
-      description: 'Receive real-time data via webhook endpoints',
-      icon: 'zap',
-      brandColor: '#8B5CF6',
-      fields: ['Dynamic Payload', 'Timestamp', 'Source IP', 'Event Type'],
-      isRealtime: true,
-      webhookUrl: 'https://api.promptflow.com/webhook/abc123'
-    },
-    {
-      id: 'csv-upload',
-      title: 'CSV Upload',
-      type: 'data-source',
-      category: 'File',
-      description: 'Upload and process CSV data files',
+      category: 'Development',
+      description: 'Project configuration and requirements data',
       icon: 'file-text',
-      brandColor: '#10B981',
-      fields: ['Dynamic Headers', 'Row Count', 'File Size', 'Upload Date'],
+      brandColor: '#3B82F6',
+      fields: ['App Name', 'Framework', 'Features', 'Tech Stack', 'Target Platform'],
       isRealtime: false
+    },
+    {
+      id: 'user-requirements',
+      title: 'User Requirements',
+      type: 'data-source',
+      category: 'Development',
+      description: 'User stories and feature requirements',
+      icon: 'users',
+      brandColor: '#10B981',
+      fields: ['User Type', 'Feature Request', 'Priority', 'Complexity', 'Timeline'],
+      isRealtime: false
+    },
+    {
+      id: 'api-specs',
+      title: 'API Specifications',
+      type: 'data-source',
+      category: 'Development',
+      description: 'API endpoints and data schemas',
+      icon: 'database',
+      brandColor: '#8B5CF6',
+      fields: ['Endpoint', 'Method', 'Parameters', 'Response Format', 'Auth Type'],
+      isRealtime: false
+    },
+    {
+      id: 'code-review',
+      title: 'Code Review Data',
+      type: 'data-source',
+      category: 'Development',
+      description: 'Code review feedback and suggestions',
+      icon: 'briefcase',
+      brandColor: '#F59E0B',
+      fields: ['File Path', 'Issue Type', 'Severity', 'Suggestion', 'Line Number'],
+      isRealtime: true
     }
   ])
   const [searchTerm, setSearchTerm] = useState('')
@@ -144,17 +132,17 @@ const WorkflowBuilder = () => {
         const fallbackPrompts = [
           {
             id: 1,
-            title: "Linux Terminal",
+            title: "Interactive Web App",
             category: "Development",
-            description: "Act as a linux terminal and execute commands",
-            content: "I want you to act as a linux terminal. I will type commands and you will reply with what the terminal should show."
+            description: "Create an interactive web application with specified features",
+            content: "Create a {{app_type}} web application using {{framework}} with the following features: {{features}}. The app should target {{target_audience}} and include {{ui_components}}. Use {{styling_approach}} for styling and ensure {{performance_requirements}} performance."
           },
           {
             id: 2,
-            title: "English Translator",
-            category: "Language",
-            description: "Translate and improve English text",
-            content: "I want you to act as an English translator, spelling corrector and improver."
+            title: "Code Review Assistant",
+            category: "Development", 
+            description: "Analyze code and provide improvement suggestions",
+            content: "Review the {{language}} code in {{file_path}} and analyze for {{review_criteria}}. Focus on {{code_quality_aspects}} and provide suggestions for {{improvement_areas}}. Consider the {{project_context}} and {{team_standards}}."
           }
         ]
         setPrompts(fallbackPrompts)
